@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Driply — Stop the subscription drip</title>
+<meta name="description" content="The average person wastes $348/year on subscriptions they forgot about. Driply shows you exactly what's draining your wallet — and what to cut.">
+<meta property="og:title" content="Driply — Stop the subscription drip">
+<meta property="og:description" content="See what your subscriptions are really costing you. One tap to find out.">
+<meta property="og:image" content="og-image.png">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink:    #1B2A33;
+    --paper:  #FAF6ED;
+    --coral:  #D9694F;
+    --gold:   #C9A227;
+    --green:  #7A9B76;
+    --muted:  #9B9384;
+    --rule:   #EDE7D8;
+    --dots:   #C9C2B0;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--ink);
+    color: var(--paper);
+    font-family: -apple-system, system-ui, 'Segoe UI', sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ---- Layout ---- */
+  .container { max-width: 680px; margin: 0 auto; padding: 0 24px; }
+
+  /* ---- Nav ---- */
+  nav {
+    padding: 20px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 680px;
+    margin: 0 auto;
+  }
+  .nav-logo { font-family: Georgia, serif; font-size: 18px; font-weight: 700; color: var(--paper); letter-spacing: -0.01em; }
+  .nav-cta {
+    background: var(--coral);
+    color: var(--paper);
+    border: none;
+    border-radius: 20px;
+    padding: 8px 18px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: opacity 0.15s;
+  }
+  .nav-cta:hover { opacity: 0.85; }
+
+  /* ---- Hero ---- */
+  .hero {
+    padding: 60px 24px 48px;
+    max-width: 680px;
+    margin: 0 auto;
+  }
+  .hero-eyebrow {
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--coral);
+    font-weight: 600;
+    margin-bottom: 16px;
+  }
+  .hero-headline {
+    font-family: Georgia, serif;
+    font-size: clamp(36px, 8vw, 60px);
+    font-weight: 700;
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+    color: var(--paper);
+    margin-bottom: 20px;
+  }
+  .hero-headline em {
+    font-style: normal;
+    color: var(--coral);
+    position: relative;
+    display: inline-block;
+  }
+  .hero-headline em::after {
+    content: '';
+    position: absolute;
+    bottom: 4px;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: var(--coral);
+    opacity: 0.35;
+    border-radius: 2px;
+  }
+  .hero-body {
+    font-size: 17px;
+    color: var(--dots);
+    line-height: 1.65;
+    max-width: 480px;
+    margin-bottom: 36px;
+  }
+  .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--paper);
+    color: var(--ink);
+    border: none;
+    border-radius: 12px;
+    padding: 14px 24px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: none;
+    transition: transform 0.15s, opacity 0.15s;
+  }
+  .btn-primary:hover { transform: translateY(-1px); opacity: 0.92; }
+  .btn-primary svg { width: 18px; height: 18px; }
+  .hero-note { font-size: 12px; color: var(--muted); }
+
+  /* ---- Drip calculator ---- */
+  .calc-section {
+    padding: 0 24px 64px;
+    max-width: 680px;
+    margin: 0 auto;
+  }
+  .calc-card {
+    background: var(--paper);
+    border-radius: 16px;
+    padding: 32px;
+    position: relative;
+    overflow: hidden;
+  }
+  .calc-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--coral), var(--gold));
+  }
+  .calc-label {
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .calc-question {
+    font-family: Georgia, serif;
+    font-size: 20px;
+    color: var(--ink);
+    margin-bottom: 20px;
+    line-height: 1.3;
+  }
+  .calc-input-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+  .calc-stepper {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    border: 1.5px solid var(--rule);
+    border-radius: 10px;
+    overflow: hidden;
+    background: #fff;
+  }
+  .calc-stepper button {
+    background: none;
+    border: none;
+    width: 44px;
+    height: 44px;
+    font-size: 20px;
+    cursor: pointer;
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.1s;
+  }
+  .calc-stepper button:hover { background: var(--rule); }
+  .calc-stepper-val {
+    font-family: 'Courier New', monospace;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--ink);
+    width: 40px;
+    text-align: center;
+  }
+  .calc-avg-note { font-size: 13px; color: var(--muted); }
+  .calc-result {
+    border-top: 1px dashed var(--dots);
+    padding-top: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .calc-result-label { font-size: 13px; color: var(--muted); margin-bottom: 4px; }
+  .calc-result-amount {
+    font-family: 'Courier New', monospace;
+    font-size: 48px;
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1;
+    transition: color 0.3s;
+  }
+  .calc-result-amount.danger { color: var(--coral); }
+  .calc-result-sub { font-size: 13px; color: var(--muted); margin-top: 4px; }
+  .calc-result-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--ink);
+    color: var(--paper);
+    border-radius: 10px;
+    padding: 12px 18px;
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: opacity 0.15s;
+    white-space: nowrap;
+  }
+  .calc-result-cta:hover { opacity: 0.85; }
+
+  /* ---- Features ---- */
+  .features-section {
+    padding: 64px 24px;
+    max-width: 680px;
+    margin: 0 auto;
+  }
+  .section-eyebrow {
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 600;
+    margin-bottom: 12px;
+  }
+  .section-title {
+    font-family: Georgia, serif;
+    font-size: clamp(24px, 5vw, 36px);
+    font-weight: 700;
+    color: var(--paper);
+    line-height: 1.15;
+    margin-bottom: 40px;
+    max-width: 480px;
+  }
+  .features-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 480px) { .features-grid { grid-template-columns: 1fr; } }
+  .feature-card {
+    background: rgba(250,246,237,0.06);
+    border: 1px solid rgba(250,246,237,0.1);
+    border-radius: 12px;
+    padding: 20px;
+    transition: background 0.2s;
+  }
+  .feature-card:hover { background: rgba(250,246,237,0.09); }
+  .feature-icon { font-size: 24px; margin-bottom: 10px; }
+  .feature-title { font-family: Georgia, serif; font-size: 15px; font-weight: 700; color: var(--paper); margin-bottom: 4px; }
+  .feature-body { font-size: 13px; color: var(--muted); line-height: 1.55; }
+
+  /* ---- Privacy ---- */
+  .privacy-section {
+    padding: 48px 24px;
+    max-width: 680px;
+    margin: 0 auto;
+  }
+  .privacy-card {
+    background: rgba(122,155,118,0.1);
+    border: 1px solid rgba(122,155,118,0.25);
+    border-radius: 12px;
+    padding: 24px 28px;
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+  }
+  .privacy-icon { font-size: 28px; flex-shrink: 0; }
+  .privacy-title { font-family: Georgia, serif; font-size: 16px; font-weight: 700; color: var(--paper); margin-bottom: 4px; }
+  .privacy-body { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+  /* ---- Pricing ---- */
+  .pricing-section {
+    padding: 64px 24px;
+    max-width: 680px;
+    margin: 0 auto;
+  }
+  .pricing-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 32px; }
+  @media (max-width: 480px) { .pricing-grid { grid-template-columns: 1fr; } }
+  .pricing-card {
+    background: rgba(250,246,237,0.06);
+    border: 1px solid rgba(250,246,237,0.1);
+    border-radius: 16px;
+    padding: 24px;
+  }
+  .pricing-card.featured {
+    background: var(--paper);
+    border-color: var(--paper);
+  }
+  .pricing-badge {
+    display: inline-block;
+    background: var(--coral);
+    color: var(--paper);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border-radius: 20px;
+    padding: 3px 10px;
+    margin-bottom: 12px;
+  }
+  .pricing-name { font-family: Georgia, serif; font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+  .pricing-card .pricing-name { color: var(--paper); }
+  .pricing-card.featured .pricing-name { color: var(--ink); }
+  .pricing-price { font-family: 'Courier New', monospace; font-size: 32px; font-weight: 700; margin-bottom: 4px; }
+  .pricing-card .pricing-price { color: var(--paper); }
+  .pricing-card.featured .pricing-price { color: var(--ink); }
+  .pricing-period { font-size: 12px; margin-bottom: 16px; }
+  .pricing-card .pricing-period { color: var(--muted); }
+  .pricing-card.featured .pricing-period { color: #6B6456; }
+  .pricing-features { list-style: none; }
+  .pricing-features li { font-size: 13px; padding: 4px 0; display: flex; gap: 8px; align-items: baseline; }
+  .pricing-card .pricing-features li { color: var(--muted); }
+  .pricing-card.featured .pricing-features li { color: #6B6456; }
+  .pricing-check { color: var(--green); font-size: 12px; flex-shrink: 0; }
+  .pricing-card.featured .pricing-check { color: var(--green); }
+
+  /* ---- Final CTA ---- */
+  .final-section {
+    padding: 80px 24px 96px;
+    max-width: 680px;
+    margin: 0 auto;
+    text-align: center;
+  }
+  .final-headline {
+    font-family: Georgia, serif;
+    font-size: clamp(28px, 6vw, 44px);
+    font-weight: 700;
+    color: var(--paper);
+    line-height: 1.15;
+    margin-bottom: 16px;
+  }
+  .final-sub { font-size: 16px; color: var(--muted); margin-bottom: 32px; }
+  .final-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+  /* ---- Footer ---- */
+  footer {
+    border-top: 1px solid rgba(250,246,237,0.08);
+    padding: 24px;
+    max-width: 680px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  footer p { font-size: 12px; color: var(--muted); }
+  footer a { color: var(--muted); text-decoration: none; }
+  footer a:hover { color: var(--paper); }
+  .footer-links { display: flex; gap: 20px; }
+
+  /* ---- Drip animation ---- */
+  .drip-wrap {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: 8px;
+  }
+  .drip-dot {
+    width: 8px;
+    height: 8px;
+    background: var(--coral);
+    border-radius: 50%;
+    animation: drip 1.4s ease-in-out infinite;
+  }
+  .drip-dot:nth-child(2) { animation-delay: 0.2s; opacity: 0.7; }
+  .drip-dot:nth-child(3) { animation-delay: 0.4s; opacity: 0.4; }
+  @keyframes drip {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(5px); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .drip-dot { animation: none; }
+    .btn-primary, .nav-cta, .calc-result-cta { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <span class="nav-logo">Driply</span>
+  <a href="#download" class="nav-cta">Download free</a>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <p class="hero-eyebrow">Subscription tracker for iPhone</p>
+  <h1 class="hero-headline">
+    Your money is<br>
+    <em>dripping away</em><span class="drip-wrap"><span class="drip-dot"></span><span class="drip-dot"></span><span class="drip-dot"></span></span>
+  </h1>
+  <p class="hero-body">
+    The average person pays for 12+ subscriptions and forgets half of them.
+    Driply shows you the real monthly total, catches renewals before they hit,
+    and spots what you haven't used in 30 days — so you can actually decide what's worth keeping.
+  </p>
+  <div class="hero-actions">
+    <a href="#download" class="btn-primary" id="downloadBtn">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+      Download on the App Store
+    </a>
+    <p class="hero-note">Free to start · iOS only</p>
+  </div>
+</section>
+
+<!-- Drip Calculator -->
+<section class="calc-section">
+  <div class="calc-card">
+    <p class="calc-label">Drip calculator</p>
+    <p class="calc-question">How many subscriptions are you paying for right now?</p>
+    <div class="calc-input-row">
+      <div class="calc-stepper">
+        <button onclick="changeCount(-1)" aria-label="Decrease">−</button>
+        <span class="calc-stepper-val" id="countVal">8</span>
+        <button onclick="changeCount(1)" aria-label="Increase">+</button>
+      </div>
+      <p class="calc-avg-note">The average American has 12.</p>
+    </div>
+    <div class="calc-result">
+      <div>
+        <p class="calc-result-label">Estimated yearly spend</p>
+        <p class="calc-result-amount" id="yearlyAmt">$1,152</p>
+        <p class="calc-result-sub" id="monthlySub">$96/mo · based on $12 avg per subscription</p>
+      </div>
+      <a href="#download" class="calc-result-cta">
+        See the real number →
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- Features -->
+<section class="features-section">
+  <p class="section-eyebrow">What Driply does</p>
+  <h2 class="section-title">Everything you need to stop paying for things you don't use.</h2>
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon">📊</div>
+      <p class="feature-title">Your real monthly total</p>
+      <p class="feature-body">All your subscriptions, converted to a single honest number — broken down by month and year.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🔔</div>
+      <p class="feature-title">Renewal reminders</p>
+      <p class="feature-body">A heads-up 3 days before anything renews, so you can decide to keep or cancel before the charge hits.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">✂️</div>
+      <p class="feature-title">Cancel recommendations</p>
+      <p class="feature-body">Driply flags anything you haven't used in 30+ days and shows exactly what canceling it saves per year.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📁</div>
+      <p class="feature-title">CSV export</p>
+      <p class="feature-body">Export everything to a spreadsheet for budgeting, tax prep, or just your own records.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">⚡</div>
+      <p class="feature-title">Quick add</p>
+      <p class="feature-body">Tap Netflix, Spotify, Hulu and more from a pre-built list — no typing required to get started.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🎭</div>
+      <p class="feature-title">Spending personality</p>
+      <p class="feature-body">Find out if you're "The Binge Watcher," "The Productivity Nerd," or something else entirely.</p>
+    </div>
+  </div>
+</section>
+
+<!-- Privacy -->
+<section class="privacy-section">
+  <div class="privacy-card">
+    <div class="privacy-icon">🔒</div>
+    <div>
+      <p class="privacy-title">Everything stays on your phone.</p>
+      <p class="privacy-body">No bank link. No account. No data sent anywhere. Driply stores everything locally on your device — your subscription data is yours, period. That's not a feature, it's just how the app was built.</p>
+    </div>
+  </div>
+</section>
+
+<!-- Pricing -->
+<section class="pricing-section" id="pricing">
+  <p class="section-eyebrow">Pricing</p>
+  <h2 class="section-title">Free to start. Pro when you need it.</h2>
+  <div class="pricing-grid">
+    <div class="pricing-card">
+      <p class="pricing-name">Free</p>
+      <p class="pricing-price">$0</p>
+      <p class="pricing-period">forever</p>
+      <ul class="pricing-features">
+        <li><span class="pricing-check">✓</span> Up to 5 subscriptions</li>
+        <li><span class="pricing-check">✓</span> Monthly & yearly totals</li>
+        <li><span class="pricing-check">✓</span> Quick add popular services</li>
+        <li><span class="pricing-check">✓</span> Due this week alerts</li>
+      </ul>
+    </div>
+    <div class="pricing-card featured">
+      <span class="pricing-badge">Most popular</span>
+      <p class="pricing-name">Driply Pro</p>
+      <p class="pricing-price">$9.99</p>
+      <p class="pricing-period">per year — or $1.99/month</p>
+      <ul class="pricing-features">
+        <li><span class="pricing-check">✓</span> Unlimited subscriptions</li>
+        <li><span class="pricing-check">✓</span> Renewal push reminders</li>
+        <li><span class="pricing-check">✓</span> Category breakdown chart</li>
+        <li><span class="pricing-check">✓</span> Cancel recommendations</li>
+        <li><span class="pricing-check">✓</span> CSV export</li>
+        <li><span class="pricing-check">✓</span> Weekly spending digest</li>
+        <li><span class="pricing-check">✓</span> Spending personality</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- Final CTA -->
+<section class="final-section" id="download">
+  <h2 class="final-headline">Find out what your subscriptions are really costing you.</h2>
+  <p class="final-sub">Free to download. Takes 60 seconds to set up.</p>
+  <div class="final-actions">
+    <a href="#" class="btn-primary">
+      <svg viewBox="0 0 24 24" fill="currentColor" style="width:18px;height:18px"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+      Download on the App Store
+    </a>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <p>© 2026 The Suede Collective · Driply</p>
+  <div class="footer-links">
+    <a href="driply-privacy-policy.html">Privacy Policy</a>
+    <a href="mailto:stopthedrip.app@gmail.com">Support</a>
+  </div>
+</footer>
+
+<script>
+  // ---- Drip calculator ----
+  let count = 8;
+  const AVG_PRICE = 12;
+
+  function fmt(n) {
+    return '$' + Math.round(n).toLocaleString('en-US');
+  }
+
+  function updateCalc() {
+    const monthly = count * AVG_PRICE;
+    const yearly = monthly * 12;
+    document.getElementById('countVal').textContent = count;
+    const amtEl = document.getElementById('yearlyAmt');
+    amtEl.textContent = fmt(yearly);
+    amtEl.classList.toggle('danger', yearly >= 1000);
+    document.getElementById('monthlySub').textContent =
+      fmt(monthly) + '/mo · based on $' + AVG_PRICE + ' avg per subscription';
+  }
+
+  function changeCount(delta) {
+    count = Math.max(1, Math.min(30, count + delta));
+    updateCalc();
+  }
+
+  updateCalc();
+
+  // ---- Smooth scroll offset for fixed nav ----
+  document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', e => {
+      const target = document.querySelector(a.getAttribute('href'));
+      if (target) {
+        e.preventDefault();
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  });
+
+  // ---- Scroll reveal ----
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.style.opacity = '1';
+        e.target.style.transform = 'translateY(0)';
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.feature-card, .pricing-card, .privacy-card').forEach(el => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(16px)';
+    el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+    observer.observe(el);
+  });
+</script>
+</body>
+</html>
